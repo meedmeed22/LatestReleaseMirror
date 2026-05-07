@@ -90,11 +90,6 @@ jobs:
             exit 1
           fi
 
-          # Install zip if missing (needed for splitting)
-          if ! command -v zip &>/dev/null; then
-            sudo apt-get update -qq && sudo apt-get install -y -qq zip
-          fi
-
           grep -v '^#' repos.txt | grep -v '^[[:space:]]*$' | while IFS='|' read -r repo_path filter_pattern; do
             repo_path=$(echo "$repo_path" | xargs)
             filter_pattern=$(echo "$filter_pattern" | xargs)
@@ -152,13 +147,29 @@ jobs:
                 filepath="$target_dir/$filename"
                 if [ -f "$filepath" ]; then
                   file_size=$(stat -c%s "$filepath" 2>/dev/null || stat -f%z "$filepath" 2>/dev/null)
-                  if [ -n "$file_size" ] && [ "$file_size" -gt 104857600 ]; then
-                    echo "    File larger than 100 MB (${file_size} bytes). Splitting into 50 MB parts..."
+                                    if [ -n "$file_size" ] && [ "$file_size" -gt 104857600 ]; then
+                    echo "  File larger than 100 MB (${file_size} bytes). Splitting into 50 MB parts..."
                     (
                       cd "$target_dir"
-                      zip -r -q -s 50m "${filename}.zip" "$filename" && rm "$filename"
-                      echo "    Split done. Parts: $(ls ${filename}.zip* 2>/dev/null | wc -l) files"
-                    ) || echo "    Splitting failed for $filename"
+                      # Use --numeric-suffixes=1 if available (GNU split 8.16+)
+                      if split --help 2>&1 | grep -q -- "--numeric-suffixes"; then
+                        split -b 50m --numeric-suffixes=1 -a 3 "$filename" "${filename}."
+                      else
+                        # Fallback: split from 000 then rename
+                        split -b 50m -d -a 3 "$filename" "${filename}."
+                        files=($(ls "${filename}."??? | sort))
+                        for i in "${!files[@]}"; do
+                          new=$(printf "%s.%03d" "$filename" $((i+1)))
+                          mv "${files[$i]}" "$new"
+                        done
+                      fi
+                      if ls "${filename}."??? 1>/dev/null 2>&1; then
+                        rm "$filename"
+                        echo "  Split done. Parts: $(ls "${filename}."??? 2>/dev/null | wc -l) files (starting from .001)"
+                      else
+                        echo "  Splitting failed for $filename"
+                      fi
+                    ) || echo "  Splitting failed for $filename"
                   fi
                 fi
               done < <(curl -s "https://api.github.com/repos/$repo_path/releases/tags/$tag" \
