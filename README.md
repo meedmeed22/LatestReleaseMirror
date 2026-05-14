@@ -157,5 +157,13 @@ sha256sum FILE_NAME
 
 
 <!-- RELEASES_START -->
+<div id="hidden-node--gooserelayvpn-androidclient"></div>
 
+### Hidden-Node--GooseRelayVPN-AndroidClient
+
+🔗 [source](https://github.com/Hidden-Node/GooseRelayVPN-AndroidClient) – [<code><small>v1.0.3</small></code>](https://github.com/Hidden-Node/GooseRelayVPN-AndroidClient/releases/tag/v1.0.3)
+
+| File | Size | Download |
+|------|------|----------|
+| `GooseRelayVPN-HN-1.0.3-armeabi-v7a-release.apk` | 11.1 MB | [⬇️ Download](https://raw.githubusercontent.com/meedmeed22/LatestReleaseMirror/main/releases/Hidden-Node/GooseRelayVPN-AndroidClient/GooseRelayVPN-HN-1.0.3-armeabi-v7a-release.apk) |
 <!-- RELEASES_END -->
